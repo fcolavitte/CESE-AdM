@@ -1,0 +1,16 @@
+Preguntas orientadoras
+1. Describa brevemente los diferentes perfiles de familias de microprocesadores/microcontroladores de ARM. Explique alguna de sus diferencias características.
+
+Los microprocesadores/microcontroladores ARM se clasifican en Application(A), Real Time (R) y Microcontroller(M).
+- Cortex A: Procesadores de elevado performance preparados para correr sistemas operativos. Estos OS se alejan de los RTOS dado a que los Cortex A poseen memoria caché lo que genera tiempos de acceso a datos no constantes.
+- Cortex R: Procesadores destinados a RTOS, con una arquitectura diseñada para posser un elevado performance sin perder la referencia de tiempo garantizando el procesamiento en tiempo real.
+- Cortex M: Microcontroladores de uso genérico para sistemas embebidos, con caracteristicas de bajo consumo y orientado a bare-metal y RTOS como FreeRTOS.
+
+------------------------------------------------------------------------------------------------------------------
+Cortex M
+1. Describa brevemente las diferencias entre las familias de procesadores Cortex M0, M3 y
+M4.
+
+- M0: Microcnontroladores de consumo masivo, de bajo coste y baja capacidad de procesamiento en comparación a M3 y superiores. Orientado principalmente al manejo de puertos GPIO y procesamiento general de datos. En general de bajo consumo energético.
+- M3: Mayor performance que la familia M0, con capacidad de procesamiento avanzado de datos. Pueden poseer memory protection unit.
+- M4: Similares a los M3, levemente superiores. Agregan funciones como SIMD, soportan FPU por hardware e incluyen instrucciones para trabajar con aritmética saturada.
