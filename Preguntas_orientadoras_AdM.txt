@@ -57,7 +57,7 @@ Por lo que para ciertas acciones a realizar por el código, puede consumir más 
 tipo de arquitectura?
 La arquitectura de ARM no trabaja directamente con los datos guardados en RAM, sino que trabaja con los registros.
 Para esto se tienen tres pasos:
-> 1: Para acceder a los datos se utiliza la función de "load" la cual mueve un valor guardado en RAM a un registro, generalmente de 0:15 y en el caso de Thumb de 0 a 7.
+> 1: Para acceder a los datos se utiliza la función de "load" la cual mueve un valor guardado en RAM a un registro, generalmente de 0 a 12 y en el caso de Thumb de 0 a7.
 > 2: Se opera con los valores que se encuentran en los registros de propósito general.
 > 3: De requerirse, se guarda el resultado en RAM moviendo el valor desde uno de los registros de propósito general con la función "store".
 Existen distintas funciones para movimiento de datos:
