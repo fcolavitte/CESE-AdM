@@ -104,3 +104,31 @@ Los primeros 0,5GB corresponden a memoria de programa, luego 0,5 a SRAM, 0,5 Per
 0x00000000  │        │
 	    └────────┘
 Dentro de SRAM y Perisféricos, el primer MB corresponde a bit band, manejados por las posiciones relativas de 32MB a 64MB de cada bloque.
+
+5. ¿Qué ventajas presenta el uso de los “shadowed pointers” del PSP y el MSP?
+Tanto MSP como PSP son particiones de la pila.
+MSP: Main Stack Pointer
+PSP: Processor Stack Pointer
+
+En bare-metal se utiliza el MSP como única pila. Mientras que en RTOS solo el kernel e interrupciones tiene acceso a el MSP, mientras que las "task" acceden a las PSP de cada tarea.
+Cada stack pointer tiene una capacidad determinada que puede ser modificada. Cada tarea solo puede acceder a su PSP y no al de otros ni al MSP.
+En RTOS la MPU (Memory Protection Unit) define qué parte de la pila puede acceder cada task.
+Para cada PSP y el MSP la función PUSH y POP maneja la pila referida a la tarea que se está ejecutando o el kernel, protegiendo al resto de las particiones de la pila.
+En caso de que una task esté corrupta no puede modificar otros PSP ni el MSP por lo que el error no se propaga. Tampoco una task puede modificar los PSP de otras task.
+
+6. Describa los diferentes modos de privilegio y operación del Cortex M, sus relaciones y como se conmuta de uno al otro.
+   Describa un ejemplo en el que se pasa del modo privilegiado a no priviligiado y nuevamente a privilegiado.
+
+Existe el thread mode y handler mode.
+El modo thread es la ejecución normal del programa, al igual que en bare-metal. Mientras que el handler mode es el código que se ejecuta por medio de una interrupción.
+A su vez el sistema se puede configurar en modo privilegiado y no privilegiado. En bare-metal se ejecuta el código en modo privilegiado.
+Cuando se usa un RTOS, el kernel se ejecuta en modo privilegiado mientras que las task se ejecutan en modo no privilegiado.
+En modo no privilegiado las task solo pueden acceder a su PSP (Processor Stack Pointer) sin poder modificar el de otra task ni el MSP.
+El kernel tras realizar la configuración de las task pasa a modo no privilegiado y ejecuta la task de mayor priordad.
+Al ocurrir una interrupción del systick se pasa al modo privilegiado por estarse ejecutando una interrupción.
+Esta pasa el modo a privilegiado para llamar al kernel, el cual define la proxima tarea a realizar en caso de que se requiera un cambio y vuelve a cambiar el modo a no privilegiado para ejecutar la task.
+De modo privilegiado se puede pasar en cualquier momento a no privilegiado. Pero para acceder a modo privilegiado únicamente se puede realizar al ocurrir una interrupción.
+Es por esto que se requiere las interrupciones del systick para dar paso al kernel el cual corre en modo privilegiado.
+
+7. ¿Qué se entiende por modelo de registros ortogonal? Dé un ejemplo
+
