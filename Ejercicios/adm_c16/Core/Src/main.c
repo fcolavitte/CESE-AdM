@@ -63,6 +63,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 void asm_zeros (uint32_t * vector, uint32_t longitud);
+extern void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -158,8 +159,12 @@ int main(void)
   //PrivilegiosSVC ();
   //const uint32_t Resultado = asm_sum (5, 3);
 
-  uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
-  asm_zeros (vector, 4); 				//Clase 5/8
+  //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
+  //asm_zeros (vector, 4); 				//Clase 5/8
+
+  uint32_t vectorIn[3] = {3,5,8};
+  uint32_t vectorOut[3] = {0,0,0};
+
 
   /* USER CODE END 2 */
 
@@ -168,7 +173,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  asm_productoEscalar32 (vectorIn, vectorOut, 3, 7);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
