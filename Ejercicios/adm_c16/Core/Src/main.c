@@ -389,6 +389,79 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+/**
+ * @Note   Ejercicio 1
+ * @brief  Completar con ceros un vector
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @retval Null
+ */
+void zeros (uint32_t * vector, uint32_t longitud){
+	if(vector!=0){
+		for(uint32_t i=0;i<longitud;i++){
+			vector[i]=0;
+		}
+	}
+}
+
+
+/**
+ * @Note   Ejercicio 2
+ * @brief  Realizar productor entre vector y escalar y guardar en un nuevo vector
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @param  Escalar por el que multiplicar el vector
+ * @retval Null
+ */
+void productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar){
+	if(vectorIn!=0 && vectorOut!=0){
+		for(uint32_t i=0; i<longitud; i++){
+			vectorOut[i] = vectorIn[i] * escalar;
+		}
+	}
+}
+
+/**
+ * @Note   Ejercicio 3
+ * @brief  Realizar productor entre vector y escalar y guardar en un nuevo vector
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @param  Escalar por el que multiplicar el vector
+ * @retval Null
+ */
+void productoEscalar16 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar){
+	if(vectorIn!=0 && vectorOut!=0){
+		for(uint32_t i=0; i<longitud; i++){
+			vectorOut[i] = vectorIn[i] * escalar;
+		}
+	}
+}
+
+/**
+ * @Note   Ejercicio 4
+ * @brief  Realizar productor entre vector y escalar y guardar en un nuevo vector con saturación a 12 bits
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @param  Escalar por el que multiplicar el vector
+ * @retval Null
+ */
+void productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar){
+	if(vectorIn!=0 && vectorOut!=0){
+		for(uint32_t i=0; i<longitud; i++){
+			if(vectorIn[i] * escalar < 4096){
+				vectorOut[i] = vectorIn[i] * escalar;
+			}else{
+				vectorOut[i] = 4096;
+			}
+		}
+	}
+}
+
+
+
 /* USER CODE END 4 */
 
 /**

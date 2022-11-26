@@ -59,3 +59,55 @@
     subs r1, 1            @ Resta 1 a la cantidad de elementos y actualiza flags de estado del procesador. En particular, estamos interesados en el flag Z.
     bne asm_zeros_bucle   @ La instrucción se ejecuta mientras el resultado de r1 - 1 no sea cero (Z == 0).
     bx lr                 @ La instrucción de salto no se ejecutó porque Z == 1, volvemos a quién nos llamó.
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C":
+@   void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+@   r3: escalar por el que multiplicar el vector
+.thumb_func               @ Se avisa al emsablador que esta es una funcion
+    asm_productoEscalar32:            @ Etiqueta/nombre de la función.
+        ldr r4, [r0]      @ r4 = *r0; @ Muevo a r4 el valor al que apunta r0
+	mov r5, r3	          @ r5 = r3;  @ r5 es una copia del escalar
+	mov r6, 0	          @ r6 = 0;
+	asm_product_32:	      @ Etiqueta donde comienza el bucle para multiplicar escalar por elemento de vector
+	    adds r6, r6, r4   @ r6+=r4;
+	    subs r5, 1	      @ r5--;
+	    bne asm_product_32@ Regreso a asm_product si r5 no llegó a cero. Si llegó a cero "r6 = r4 * r3;"
+	str r6, [r1]	      @ Guardo r6 en la dirección a la que apunta r1
+	add r0, 4	  		  @  Pasa al siguiente elemento del vector de entrada. Mueve 4 bytes.
+	add r1, 4	          @  Pasa al siguiente elemento del vector de salida. Mueve 4 bytes.
+	subs r2, 1	          @ Resta 1 a la cantidad de elementos del vector.
+	bne asm_productoEscalar32         @ Va a la siguiente multiplicación. Salta si r2 llegó a cero.
+    bx lr		          @ Vuelve a la llamada de la función
+
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C":
+@   void asm_productoEscalar16 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+@   r3: escalar por el que multiplicar el vector
+.thumb_func               @ Se avisa al emsablador que esta es una funcion
+    asm_productoEscalar16:            @ Etiqueta/nombre de la función.
+        ldr r4, [r0]      @ r4 = *r0; @ Muevo a r4 el valor al que apunta r0
+	mov r5, r3	          @ r5 = r3;  @ r5 es una copia del escalar
+	mov r6, 0	          @ r6 = 0;
+	asm_product_16:	      @ Etiqueta donde comienza el bucle para multiplicar escalar por elemento de vector
+	    adds r6, r6, r4   @ r6+=r4;
+	    subs r5, 1	      @ r5--;
+	    bne asm_product_16			  @ Regreso a asm_product si r5 no llegó a cero. Si llegó a cero "r6 = r4 * r3;"
+	str r6, [r1]	      @ Guardo r6 en la dirección a la que apunta r1
+	add r0, 2	          @ Pasa al siguiente elemento del vector de entrada. Mueve 2 bytes.
+	add r1, 2	          @ Pasa al siguiente elemento del vector de salida. Mueve 2 bytes.
+	subs r2, 1	          @ Resta 1 a la cantidad de elementos del vector.
+	bne asm_productoEscalar16         @ Va a la siguiente multiplicación. Salta si r2 llegó a cero.
+    bx lr		          @ Vuelve a la llamada de la función
