@@ -7,3 +7,24 @@ void pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud){
 		}
 	}
 }
+
+
+
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C":
+@   void asm_pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+.thumb_func
+	asm_pack32to16:				@ Nombre de la función
+		asm_pack32to16_loop:		@ Inicio de bucle
+			ldr r3,[r0],#4		@ Carga el valor al que apunta r0 en r3 y mueve 4 bytes r0
+			lsr r3,16		@ Hace desplazamiento de 16 bits a derecha
+			strh r3,[r1]#2		@ Guarda r3 en la dirección donde apunta r1 y le suma 2 a r1
+			subs r2,1		@ r2-=1; y actualiza los flags
+			bne asm_pack32to16_loop	@ Se mantiene dentro del loop mientras Z!=0
+		bx lr				@ Regresa a donde se llamo la función
