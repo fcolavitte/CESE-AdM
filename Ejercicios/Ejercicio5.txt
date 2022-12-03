@@ -1,20 +1,30 @@
 //Realice una función que implemente un filtro de ventana móvil de 10 valores sobre un vector de muestras.
 
+/**
+ * @Note   Ejercicio 5
+ * @brief  Realiza un filtro de ventana realizando el promedio de 5 valores a izquierda y 5 a derecha de cada valor central
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @retval Null
+ */
 void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn){
 	if(vectorIn != 0 && vectorOut != 0){
 		int num_muestras_izq = 0;
 		int num_muestras_der = 0;
 		for(int i = 0; i<longitudVectorIn; i++){
 			num_muestras_izq = i<6 ? i : 5;
-			num_muestras_der = i<(longitudVectorIn-5) ? 5 : (longitudVectorIn-(i+1));
+			num_muestras_der = i<((int)longitudVectorIn-5) ? 5 : ((int)longitudVectorIn-(i+1));
 			*vectorOut = 0;
 			for(int j=1;j<=num_muestras_izq;j++){
-				*vectorOut += *(vectorIn - 2*j);
+				*vectorOut += *(vectorIn - j);
 			}
 			for(int j=1;j<=num_muestras_der;j++){
-				*vectorOut += *(vectorIn + 2*j);
+				*vectorOut += *(vectorIn + j);
 			}
 			*vectorOut = *vectorOut/(num_muestras_izq+num_muestras_der);
+			vectorIn++;
+			vectorOut++;
 		}
 	}
 }

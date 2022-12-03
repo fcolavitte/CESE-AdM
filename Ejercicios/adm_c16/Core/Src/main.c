@@ -64,11 +64,12 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 void asm_zeros (uint32_t * vector, uint32_t longitud);
 extern void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar);
+void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static void PrivilegiosSVC (void)
+/*static void PrivilegiosSVC (void)
 {
     // Obtiene valor del registro de 32 bits del procesador llamado "control".
     // El registro guarda los siguientes estados:
@@ -121,7 +122,7 @@ static void PrivilegiosSVC (void)
     x = __get_CONTROL ();
 
     // Fin del ejemplo de SVC
-}
+}*/
 /* USER CODE END 0 */
 
 /**
@@ -162,8 +163,8 @@ int main(void)
   //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
   //asm_zeros (vector, 4); 				//Clase 5/8
 
-  uint32_t vectorIn[3] = {3,5,8};
-  uint32_t vectorOut[3] = {0,0,0};
+  uint16_t vectorIn[12] = {4,5,8,3,15,7,12,14,3,21,11,12};
+  uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 
   /* USER CODE END 2 */
@@ -173,7 +174,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  asm_productoEscalar32 (vectorIn, vectorOut, 3, 7);
+	  //asm_productoEscalar32 (vectorIn, vectorOut, 3, 1);
+	  filtroVentana10(vectorIn, vectorOut, 12);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -465,6 +467,37 @@ void productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t long
 	}
 }
 
+
+
+
+/**
+ * @Note   Ejercicio 5
+ * @brief  Realiza un filtro de ventana realizando el promedio de 5 valores a izquierda y 5 a derecha de cada valor central
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @retval Null
+ */
+void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn){
+	if(vectorIn != 0 && vectorOut != 0){
+		int num_muestras_izq = 0;
+		int num_muestras_der = 0;
+		for(int i = 0; i<longitudVectorIn; i++){
+			num_muestras_izq = i<6 ? i : 5;
+			num_muestras_der = i<((int)longitudVectorIn-5) ? 5 : ((int)longitudVectorIn-(i+1));
+			*vectorOut = 0;
+			for(int j=1;j<=num_muestras_izq;j++){
+				*vectorOut += *(vectorIn - j);
+			}
+			for(int j=1;j<=num_muestras_der;j++){
+				*vectorOut += *(vectorIn + j);
+			}
+			*vectorOut = *vectorOut/(num_muestras_izq+num_muestras_der);
+			vectorIn++;
+			vectorOut++;
+		}
+	}
+}
 
 
 /* USER CODE END 4 */
