@@ -1,0 +1,20 @@
+//Realice una función que implemente un filtro de ventana móvil de 10 valores sobre un vector de muestras.
+
+void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn){
+	if(vectorIn != 0 && vectorOut != 0){
+		int num_muestras_izq = 0;
+		int num_muestras_der = 0;
+		for(int i = 0; i<longitudVectorIn; i++){
+			num_muestras_izq = i<6 ? i : 5;
+			num_muestras_der = i<(longitudVectorIn-5) ? 5 : (longitudVectorIn-(i+1));
+			*vectorOut = 0;
+			for(int j=1;j<=num_muestras_izq;j++){
+				*vectorOut += *(vectorIn - 2*j);
+			}
+			for(int j=1;j<=num_muestras_der;j++){
+				*vectorOut += *(vectorIn + 2*j);
+			}
+			&vectorOut = &vectorOut/(num_muestras_izq+num_muestras_der);
+		}
+	}
+}

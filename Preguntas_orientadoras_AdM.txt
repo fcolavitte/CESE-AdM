@@ -132,3 +132,150 @@ Es por esto que se requiere las interrupciones del systick para dar paso al kern
 
 7. ¿Qué se entiende por modelo de registros ortogonal? Dé un ejemplo
 
+La propiedad de ortogonalidad determina la posibilidad de combinar en una instrucción: operaciones, tipos de datos y modo de direccionamiento.
+En lo que se refiere a registros, se hace referencia a que son ortogonales cuando se puede usar cualquier modo de direccionamiento en la instrucción.
+Dentro de los modos de direccionamiento se puede encontrar el modo directo, indirecto, indexado, basado y relativo al PC.
+Ejemplo de almacenamiento indirecto con desplazamiento con registro:
+
+STR r3,[r5,r1,LSL#3] @Se guarda el valor de r3 en la dirección que apunta r5+r1*8
+
+En éste caso, el registro base es r5, y el offset es r1, el cual está multiplicado por 2^3. Las multiplicaciones (LSL) y divisiones(ASR) en el offset son opcionales.
+
+8. ¿Qué ventajas presenta el uso de intrucciones de ejecución condicional (IT)? Dé un ejemplo.
+
+Las instrucciones condicionales solo se ejecutan si se cumple la condición de los flags establecida en el subfijo.
+Entre los sufijos se pueden analizar los flags Z (EQ y NE), C (CS y CC), N (MI y PL), entre otros.
+Ejemplo, ADDNE r2, r2, #1 @ Guarda en r2 la suma de r2 y 1 solo si el flag Z es 0.
+
+9. Describa brevemente las excepciones más prioritarias (reset, NMI, Hardfault).
+
+
+-----------------------------------------------------------------------
+
+
+10. Describa las funciones principales de la pila. ¿Cómo resuelve la arquitectura el llamado a funciones y su retorno?
+
+La función principal de la pila es la de salvaguardar los datos existentes en los registros cuando se realiza un llamado a una función o un cambio de paradigma.
+En estos casos, los valores que son pasados a la función se guardan en {r0,r3}, mientras que los datos de r4 en adelante se usanban previamente por la párte del código que hizo el llamado.
+Para hacer uso de dichos registros se debe guardar primero en la pila estos valores para poder recuperarlos tras finalizar el uso del registro y así no modificar los valores de las variables que usa el código que llamó a la función.
+
+11. Describa la secuencia de reset del microprocesador.
+
+
+------------------------------------------------------------------
+
+
+12. ¿Qué entiende por “core peripherals”? ¿Qué diferencia existe entre estos y el resto de los periféricos?
+
+
+------------------------------------------------------
+
+
+13. ¿Cómo se implementan las prioridades de las interrupciones? Dé un ejemplo.
+
+
+------------------------------------------------------
+
+
+14. ¿Qué es el CMSIS? ¿Qué función cumple? ¿Quién lo provee? ¿Qué ventajas aporta?
+
+CMSIS es la abreviatura de interfaz de software standar de los microcontroladores cortex.
+El CMSIS es una capa de abstracción del hardware para los cortex M que busca que el código corra independientemente del hardware del proveedor del microcontrolador para los cortex M.
+Esto permite migraciones de microcontroladores y reutilización de códigos de forma tal de reducir tiempos y costos ya que se utiliza una interfaz de software estandarizada.
+
+15. Cuando ocurre una interrupción, asumiendo que está habilitada
+¿Cómo opera el microprocesador para atender a la subrutina correspondiente? Explique con un ejemplo.
+
+
+------------------------------------------------------
+
+
+17. ¿Cómo cambia la operación de stacking al utilizar la unidad de punto flotante?
+
+
+------------------------------------------------------
+
+
+16. Explique las características avanzadas de atención a interrupciones: tail chaining y late
+arrival.
+
+
+------------------------------------------------------
+
+
+17. ¿Qué es el systick? ¿Por qué puede afirmarse que su implementación favorece la
+portabilidad de los sistemas operativos embebidos?
+
+
+------------------------------------------------------
+
+
+18. ¿Qué funciones cumple la unidad de protección de memoria (MPU)?
+
+
+------------------------------------------------------
+
+
+19. ¿Cuántas regiones pueden configurarse como máximo? ¿Qué ocurre en caso de haber
+solapamientos de las regiones? ¿Qué ocurre con las zonas de memoria no cubiertas por las
+regiones definidas?
+
+
+------------------------------------------------------
+
+
+20. ¿Para qué se suele utilizar la excepción PendSV? ¿Cómo se relaciona su uso con el resto
+de las excepciones? Dé un ejemplo
+
+
+------------------------------------------------------
+
+
+21. ¿Para qué se suele utilizar la excepción SVC? Expliquelo dentro de un marco de un
+sistema operativo embebido.
+
+
+------------------------------------------------------
+
+
+
+ISA
+1. ¿Qué son los sufijos y para qué se los utiliza? Dé un ejemplo
+
+Los sufijos son caracteres que se escribenm a continuación de las instrucciones base para que su comportamiento repecuta en los flags o se ejecute condicionalmente dependiendo el caso.
+Ejemplo de modificación de flags:
+ADD r0,1   @r0=r0+1 pero los flags no se actualizan
+ADDS r0,1  @r0=r0+1 y los flags (Z,C,N,V) sí se actualizan.
+Aclaración: CMP es la única función que actualiza los flags tras una operación sin necesidad de agregar una "S".
+
+Ejemplo de ejecución condicional:
+ADD r0,1    @ Se ejecuta r0=r0+1
+ADDNE r0,1  @ Se ejecuta r0=r0+1 solo si se cumple la condición Z=0
+
+2. ¿Para qué se utiliza el sufijo ‘s’? Dé un ejemplo
+
+El sufijo S se utiliza para acutalizar los valores de los flags tras una operación.
+Por ejemplo, suponiendo que r1=0:
+SUB r1,#1   @ La resta da un número negativo, pero el flag N no se actualiza y mantiene su valor previo.
+SUBS r1,#1  @ La resta da un número negativo y se actualizan los flags, con esto N pasa a ser 1.
+
+3. ¿Qué utilidad tiene la implementación de instrucciones de aritmética saturada? Dé un
+ejemplo con operaciones con datos de 8 bits.
+
+
+---------------------------------------------------------------------------
+
+
+4. Describa brevemente la interfaz entre assembler y C ¿Cómo se reciben los argumentos de las funciones?
+¿Cómo se devuelve el resultado? ¿Qué registros deben guardarse en la pila antes de ser modificados?
+
+Los argumentos se reciben por los registros {r0,r3}.
+En caso de utilizarse registros adicionales a estos dentro de la función se debe guardar su valor en la pila para luego recuperarlos antes de salir de la función.
+Los datos se devuelven por r0 en caso de tener una longitud igual o inferior a 32 bits. En caso de ser superior se utiliza también r1.
+
+5. ¿Qué es una instrucción SIMD? ¿En qué se aplican y que ventajas reporta su uso? Dé un
+ejemplo.
+
+
+------------------------------------------------------
+
