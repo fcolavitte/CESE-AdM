@@ -1,0 +1,62 @@
+/* Realizar una función que recibe un vector de 4096 valores de 16 bits (signados), que
+ * corresponden a muestras de audio tomadas a una tasa de muestreo de 44.100 muestras/s. La función
+ * debe introducir un “eco” de la mitad de la amplitud de la muestra original a los 20ms de comenzada
+ * la grabación.
+ */
+
+/**
+ * @Note   Ejercicio 10
+ * @brief  Genera un eco en el vector de muestra con un offset de muestras dado
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @param  Offset del eco
+ * @retval Null
+ */
+void eco(uint32_t * vector, uint32_t longitud, uint32_t offset){
+	if(vector != 0){
+		for(uint32_t i=0; i<longitud-offset;i++){
+			*vector[longitud-i-1] += *vector[longitud-i-1-offset]/2;
+		}
+	}
+}
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C" ejercicio 10:
+@   void eco(uint32_t * vector, uint32_t longitud, uint32_t offset)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector
+@   r1: longitud
+@	r2: offset
+@ Usos de registros:
+@   r3: valor actual del vector
+@   r4: copia de la longitud. En "asm_pop_eco_loop" guarda el valor del eco
+@	r5: copia de la dirección donde comienza el vector
+.thumb_func
+	asm_eco:
+	push {r4-r5}					@ Guarda en la pila el valor de r4 y r5
+	mov r4,r1						@ Copia en r4 el largo del vector
+	mov r5,r0						@ Hace una copia en r5 de la dirección del vector
+	asm_push_eco_loop:				@ Loop_eco_push
+		ldr r3,[r0],#4				@ Guardo en r2 el valor del vector y muevo a la siguiente posición del vector
+		lsr r3,#1					@ Divide el valor del vector por 2
+		push {r3}					@ Guardo el valor del eco en la pila
+		sub r4,#1					@ longitud--;
+		cmp r4,r2					@ Comparar la longitud que queda del vector con el offset
+		bne asm_push_eco_loop		@ End Loop_eco_push
+	asm_goto_end_vector_loop:		@ Loop para ir a la última posición del array +1
+		add r0,#4					@ Avanza un lugar en la posición del vector
+		subs r4,#1					@ Avanza hasta llegar al final del vector. Resta 1 a la longitud
+		bne asm_goto_end_vector_loop
+	sub r1,r2						@ longitud -= offset;
+	asm_pop_eco_loop:				@ Loop para agregar eco a la señal
+		pop {r4}					@ Recupera el valor del último eco
+		sub r0,#4					@ Vuelve una posición para atrás en el vector
+		ldr r3,[r0]					@ Toma el valor de la posición actual del vector
+		add r3,r4					@ Suma al valor de l a posición actual el eco
+		str r3,[r0]					@ Guarda en el vector el nuevo valor con el eco
+		subs r1,#1					@ longitud--;
+		bne asm_pop_eco_loop
+	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
+	bx lr							@ Vuelve a la llamada de la función

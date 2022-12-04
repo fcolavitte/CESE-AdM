@@ -1,0 +1,51 @@
+//Realizar una función que reciba un vector de muestras signadas de 32 bits y lo decime descartando una cada N muestras.
+
+/**
+ * @Note   Ejercicio 8
+ * @brief  Descarta 1 de cada N elementos del vector
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @param  Valor cada cuánto se descarta un elemento
+ * @retval Null
+ */
+void downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N){
+	if(vectorIn != 0 && vectorOut != 0){
+		for(uint32_t i=0;i<longitud;i++){
+			if(i%N != 0){
+				*vectorOut = *vectorIn;
+				vectorOut++;
+			}
+			vectorIn++;
+		}
+	}
+}
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C" ejercicio 8:
+@   void asm_downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+@   r3: "N". Se debe descartar uno de cada N valores del vector
+@ Usos de registros:
+@   r4: contador N
+@	r5: valor actual del vector
+.thumb_func
+	asm_downsampleM:
+	push {r4-r5}					@ Guarda en el stack el valor de r4 y r5
+	mov r4,r3						@ contador = N
+	asm_downsampleM_loop:			@ Loop
+		ldr r5,[r0]					@ Carga el valor actual del array
+		subs r4,#1					@ contador--;
+		itte ne						@ if(contador!=0) {
+			strne r5,[r1]				@ Guarda el valor actual del array en el vector de salida
+			addne r1,#4					@ Siguiente dirección del vector de salida
+			moveq r4,r3				@ } else {contador = N;}
+		add r0,#4					@ Siguiente dirección del vector de entrada
+		subs r2,#1					@ longitud--;
+		bne asm_downsampleM_loop	@ End Loop
+	pop {r4-r5}						@ Recupera del stack el valor de r4 y r5
+	bx lr							@ Vuelve a la llamada de la función

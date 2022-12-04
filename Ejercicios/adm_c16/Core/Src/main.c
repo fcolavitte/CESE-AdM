@@ -62,10 +62,21 @@ static void MX_ETH_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
-void asm_zeros (uint32_t * vector, uint32_t longitud);
-extern void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar);
-extern void asm_productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar);
+//Funciones en C:
+
 void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn);
+
+//Funciones en asm:
+extern void asm_zeros (uint32_t * vector, uint32_t longitud);
+extern void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar);
+extern void asm_productoEscalar16 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar);
+extern void asm_productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar);
+	// << Ejercicio 5 en asm
+extern void asm_pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud);
+extern int32_t asm_max (int32_t * vectorIn, uint32_t longitud);
+extern void asm_downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N);
+extern void asm_invertir (uint16_t * vector, uint32_t longitud);
+extern void asm_eco(uint32_t * vector, uint32_t longitud, uint32_t offset);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -164,7 +175,7 @@ int main(void)
   //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
   //asm_zeros (vector, 4); 				//Clase 5/8
 
-  uint16_t vectorIn[12] = {4,5,8,3,15,7,12,14,3,21,11,12};
+  uint32_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
   uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 
@@ -175,8 +186,15 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
+
+
 	  //asm_productoEscalar32 (vectorIn, vectorOut, 3, 1);
-	  filtroVentana10(vectorIn, vectorOut, 12);
+	  //filtroVentana10(vectorIn, vectorOut, 12);
+
+	  asm_eco(vectorIn, 10, 3);
+
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

@@ -15,7 +15,7 @@ void zeros (uint32_t * vector, uint32_t longitud){
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@ Prototipo en "C":
+@ Prototipo en "C" ejercicio 1:
 @   void asm_zeros (uint32_t * vector, uint32_t longitud)
 @
 @ Parametros recibidos:

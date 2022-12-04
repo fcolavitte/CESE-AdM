@@ -28,3 +28,27 @@ void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitu
 		}
 	}
 }
+
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C":
+@   void asm_filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+@
+@ Usos de registros:
+@   r3: lugares a izquierda
+@   r4: lugares a derecha
+@   r5: posición actual
+.thumb_func
+	asm_filtroVentana10:
+		push{r4-r6}
+		filtroVentana10_main_loop:
+			mov r4,r5
+			cmp r4,#5
+			
+
+----------------------------------------------

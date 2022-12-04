@@ -1,0 +1,49 @@
+//Realizar una función que reciba un vector de muestras no signadas de 16 bits e invierta su orden.
+
+/**
+ * @Note   Ejercicio 9
+ * @brief  Invierte el orden del vector
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @retval Null
+ */
+void invertir (uint16_t * vector, uint32_t longitud){
+	uint16_t vector_[longitud]={0};
+	for(uint32_t i = 0;i<longitud;i++){
+		vector_[i]=vector[i];
+	}
+	for(uint32_t i = 0;i<longitud;i++){
+		vector[i]=vector_[longitud-i-1];
+	}
+}
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C" ejercicio 9:
+@   void asm_invertir (uint16_t * vector, uint32_t longitud)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector
+@   r1: longitud
+@ Usos de registros:
+@   r2: valor actual del vector
+@   r3: copia de la longitud
+@	r4: copia de la dirección donde comienza el vector
+.thumb_func
+	asm_invertir:
+	push {r4}						@ Guarda en la pila el valor de r4
+	mov r3,r1						@ Copia en r3 el largo del vector
+	mov r4,r0						@ Hace una copia en r4 de la dirección del vector
+	asm_invertir_loop_push:			@ Loop_push @ Nota: guarda en la pila el vector
+		ldrh r2,[r0]				@ Guardo en r2 el valor actual del vector
+		add r0,#2					@ Siguiente posición del vector
+		push {r2}					@ Muevo el valor del vector a la cola
+		subs r3,#1					@ longitud--;
+		bne asm_invertir_loop_push	@ End Loop_push
+	asm_invertir_loop_pop:
+		pop {r2}					@ Recupero el valor a insertar en el vector
+		strh r2,[r4]				@ Guardo el valor recuperado en el vector
+		add r4,#2					@ Siguiente posición del vector
+		subs r1,#1					@ longitud--;
+		bne asm_invertir_loop_pop	@ End Loop_pop
+	pop {r4}						@ Recupera de la pila el valor de r4
+	bx lr							@ Vuelve a la llamada de la función
