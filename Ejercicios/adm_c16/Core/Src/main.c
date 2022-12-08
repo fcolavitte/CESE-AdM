@@ -63,20 +63,30 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 /* USER CODE BEGIN PFP */
 //Funciones en C:
+void zeros(uint32_t * vector, uint32_t longitud); //Ejercicio 1
+void productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar); //Ejercicio 2
+void productoEscalar16 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar); //Ejercicio 3
+void productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar); //Ejercicio 4
+void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn); //Ejercicio 5
+void pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud); //Ejercicio 6
+int32_t max (int32_t * vectorIn, uint32_t longitud); //Ejercicio 7
+void downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N); //Ejercicio 8
+void invertir (uint16_t * vector, uint32_t longitud); //Ejercicio 9
+void eco(uint32_t * vector, uint32_t longitud, uint32_t offset); //Ejercicio 10
 
-void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn);
 
 //Funciones en asm:
 extern void asm_zeros (uint32_t * vector, uint32_t longitud);
 extern void asm_productoEscalar32 (uint32_t * vectorIn, uint32_t * vectorOut, uint32_t longitud, uint32_t escalar);
 extern void asm_productoEscalar16 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar);
 extern void asm_productoEscalar12 (uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitud, uint16_t escalar);
-	// << Ejercicio 5 en asm
+extern void asm_filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn);
 extern void asm_pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud);
 extern int32_t asm_max (int32_t * vectorIn, uint32_t longitud);
 extern void asm_downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N);
 extern void asm_invertir (uint16_t * vector, uint32_t longitud);
 extern void asm_eco(uint32_t * vector, uint32_t longitud, uint32_t offset);
+extern void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -176,7 +186,7 @@ int main(void)
   //asm_zeros (vector, 4); 				//Clase 5/8
 
   uint32_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
-  uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+  //uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 
   /* USER CODE END 2 */
@@ -193,7 +203,6 @@ int main(void)
 	  //filtroVentana10(vectorIn, vectorOut, 12);
 
 	  asm_eco(vectorIn, 10, 3);
-
 
     /* USER CODE BEGIN 3 */
   }
@@ -518,6 +527,101 @@ void filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitu
 	}
 }
 
+
+/**
+ * @Note   Ejercicio 6
+ * @brief  Trunca los valores del vector de 32 bits a 16
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @retval Null
+ */
+void pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud){
+	if(vectorIn != 0 && vectorOut != 0){
+		for(uint32_t i=0;i<longitud;i++){
+			*vectorOut=(int16_t)((*vectorIn)/65536);
+		}
+	}
+}
+
+/**
+ * @Note   Ejercicio 7
+ * @brief  Devuelve la posición del valor máximo de un vector
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @retval Null
+ */
+int32_t max (int32_t * vectorIn, uint32_t longitud){
+	if(vectorIn != 0){
+		uint32_t position = 0;
+		uint32_t max = vectorIn[0];
+		for(uint32_t i=1;i<longitud;i++){
+			if(vectorIn[i]>max){
+				position = i;
+				max = vectorIn[i];
+			}
+		}
+		return position;
+	}
+	return 0;
+}
+
+
+/**
+ * @Note   Ejercicio 8
+ * @brief  Descarta 1 de cada N elementos del vector
+ * @param  Puntero a donde comienza el vector de entrada
+ * @param  Puntero a donde comienza el vector de salida
+ * @param  Longitud del vector
+ * @param  Valor cada cuánto se descarta un elemento
+ * @retval Null
+ */
+void downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N){
+	if(vectorIn != 0 && vectorOut != 0){
+		for(uint32_t i=0;i<longitud;i++){
+			if(i%N != 0){
+				*vectorOut = *vectorIn;
+				vectorOut++;
+			}
+			vectorIn++;
+		}
+	}
+}
+
+/**
+ * @Note   Ejercicio 9
+ * @brief  Invierte el orden del vector
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @retval Null
+ */
+void invertir (uint16_t * vector, uint32_t longitud){
+	if(vector != 0 && longitud<100){
+		uint16_t vector_[100]={0};
+		for(uint32_t i = 0;i<longitud;i++){
+			vector_[i]=vector[i];
+		}
+		for(uint32_t i = 0;i<longitud;i++){
+			vector[i]=vector_[longitud-i-1];
+		}
+	}
+}
+
+/**
+ * @Note   Ejercicio 10
+ * @brief  Genera un eco en el vector de muestra con un offset de muestras dado
+ * @param  Puntero a donde comienza el vector
+ * @param  Longitud del vector
+ * @param  Offset del eco
+ * @retval Null
+ */
+void eco(uint32_t * vector, uint32_t longitud, uint32_t offset){
+	if(vector != 0){
+		for(uint32_t i=0; i<longitud-offset;i++){
+			vector[longitud-i-1] += vector[longitud-i-1-offset]/2;
+		}
+	}
+}
 
 /* USER CODE END 4 */
 

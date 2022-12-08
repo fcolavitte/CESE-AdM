@@ -8,14 +8,17 @@
  * @retval Null
  */
 void invertir (uint16_t * vector, uint32_t longitud){
-	uint16_t vector_[longitud]={0};
-	for(uint32_t i = 0;i<longitud;i++){
-		vector_[i]=vector[i];
-	}
-	for(uint32_t i = 0;i<longitud;i++){
-		vector[i]=vector_[longitud-i-1];
+	if(vector != 0 && longitud<100){
+		uint16_t vector_[100]={0};
+		for(uint32_t i = 0;i<longitud;i++){
+			vector_[i]=vector[i];
+		}
+		for(uint32_t i = 0;i<longitud;i++){
+			vector[i]=vector_[longitud-i-1];
+		}
 	}
 }
+
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C" ejercicio 9:

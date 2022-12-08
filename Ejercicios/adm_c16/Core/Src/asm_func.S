@@ -9,12 +9,13 @@
 .global asm_productoEscalar32	@Ejercicio 2
 .global asm_productoEscalar16	@Ejercicio 3
 .global asm_productoEscalar12	@Ejercicio 4
-
+.global asm_filtroVentana10		@Ejercicio 5
 .global asm_pack32to16			@Ejercicio 6
 .global asm_max					@Ejercicio 7
 .global asm_downsampleM			@Ejercicio 8
 .global asm_invertir			@Ejercicio 9
 .global asm_eco					@Ejercicio 10
+.global asm_eco_simd			@Ejercicio 10 en SIMD
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C":
@@ -164,9 +165,75 @@
 
 
 
-@---------------------------------- EJERCICIO 5 -------------------------
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C" ejercicio 5:
+@   void asm_filtroVentana10(uint16_t * vectorIn, uint16_t * vectorOut, uint32_t longitudVectorIn)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector de entrada. No se debe modificar, en su lugar usar r3 para mover en el vector
+@   r1: dirección de memoria de inicio del vector de salida
+@   r2: longitud
+@
+@ Usos de registros:
+@   r3: dirección actual del elemento central de la ventana
+@   r4: puntero auxiliar a elementos de la ventana
+@   r5: lugares a izquierda
+@   r6: lugares a derecha
+@   r7: posición actual //no se usa
+@   r8: elemento de salida de la ventana actual
+@   r9: aux para tomar elemento de una dirección
+@   r10: cantidad de elementos a promediar
+.thumb_func
+	asm_filtroVentana10:
+		push {r4-r10}
+		mov r3,r0
+		filtroVentana10_main_loop:
+			mov r4,r3			@ Centro elemento pivot en la ventana
+			mov r8,#0			@ Limpio el elemento de salida
+			mov r10,#0			@ Hago cero el ancho de la ventana
 
+			@ Cálculo de elementos a izquierda
+			sub r5,r3,r0		@ Calculo los elementos a izquierda
+			lsr r5,#1			@ Divido por 2 la cantidad de elementos a izqueirda ya que son elementos de 16bits
+			add r5,#2			@ Le sumo 2 a la cantidad de elementos a izquierda para saturar a 7 y así obtener la saturación a 5
+			usat r5,3,r5		@ Saturo a 7 la cantidad de elementos a izquierda
+			subs r5,#2			@ Resto 2 y obtengo la cantidad de elementos a izquierda saturado a 5
 
+			add r10,r5			@ Sumo los elementos a izquierda
+
+			filtroVentana10_calc_elemtos_a_izq:
+				ITTTT NE
+				subne r4,#2		@ Anterior elemento dentro de la ventana (elementos de 16bits)
+				ldrhne r9,[r4]	@ Leo el elemento de de la ventana
+				addne r8,r9		@ Sumo el elemento a la variable de salida
+				subsne r5,#1	@ Resto 1 a la cantidad de elementos de la ventana que quedan a la izquierda
+				bne filtroVentana10_calc_elemtos_a_izq
+
+			mov r4,r3			@ Centro elemento pivot en la ventana
+
+			@ Cálculo de elementos a derecha
+			sub r6,r2,#1		@ A la cantidad de elementos que quedan en la lista le resto 1 para obtener elementos a derecha
+			add r6,#2			@ A los valores a derecha le sumo 2 para saturar a 5
+			usat r6,3,r6		@ Saturo a 7 para obtener saturado a 5 los valores a derecha porque sumé 2
+			subs r6,#2			@ Resto 2 y obtengo la cantidad de elementos a derecha saturado a 5
+
+			add r10,r6			@ Sumo los elementos a derecha
+
+			filtroVentana10_calc_elemtos_a_der:
+				ITTTT NE
+				addne r4,#2		@ Siguiente elemento dentro de la ventana (elementos de 16bits)
+				ldrhne r9,[r4]	@ Leo el elemento de de la ventana
+				addne r8,r9		@ Sumo el elemento a la variable de salida
+				subsne r6,#1	@ Resto 1 a la cantidad de elementos de la ventana que quedan a la derecha
+				bne filtroVentana10_calc_elemtos_a_der
+			udiv r8,r8,r10		@ divido r8/r10
+			strh r8,[r1]		@ Guardo el valor en el vector de salida
+			add r1,#2			@ Muevo a la siguiente posición del vector de salida
+			add r3,#2			@ Muevo la ventana al siguiente elemento (16bits)
+			subs r2,#1			@ Resto 1 a la cantidad de elementos restantes
+			bne filtroVentana10_main_loop
+		pop {r4-r10}
+    	bx lr		          	@ Vuelve a la llamada de la función
 
 
 
@@ -291,7 +358,7 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C" ejercicio 10:
-@   void eco(uint32_t * vector, uint32_t longitud, uint32_t offset)
+@   void asm_eco(uint32_t * vector, uint32_t longitud, uint32_t offset)
 @
 @ Parametros recibidos:
 @   r0: dirección de memoria de inicio del vector
@@ -332,13 +399,40 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C" ejercicio 10 con SIMD:
-@   void eco(uint32_t * vector, uint32_t longitud, uint32_t offset)
+@   void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset)
 @
 @ Parametros recibidos:
 @   r0: dirección de memoria de inicio del vector
-@   r1: longitud
-@	r2: offset
-
+@   r1: longitud. Luego se usa como indice a desplazar
+@   r2: offset
+@ Usos de registros:
+@   r3: dirección de memoria del eco
+@   r4:	valor del eco
+@   r5:	valor de salida
+.thumb_func
+	asm_eco_simd:
+		push {r4-r5}
+		sub r1,#1	@ Índice del último elemento
+		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		sub r3,r0,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		sub r3,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		add r1,#3	@ Obtengo nuevamente el valor original de la longitud y agrego 2
+		sub r1,r2	@ valores que generarán el eco
+		bfc r1,0,1  @Hago 0 el bit menos significativo
+		asm_eco_simd_main_loop:
+			ldr r4,[r3]	@ Copio el valor de la señal que generará el eco
+			lsr r4,#1	@ Divido por 2 la palabra del eco
+			bfc r4,15,1	@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
+			ldr r5,[r0]	@ Copio el valor original de la señal
+			uadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
+			str r5,[r0]	@ Almaceno el valor de la señal con eco en el vector
+			sub r0,#4	@ Muevo dos direcciones en la señal original
+			sub r3,#4	@ Muevo dos direcciones en la señal que generará el eco
+			subs r1,#2	@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
+			bne asm_eco_simd_main_loop
+	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
+	bx lr							@ Vuelve a la llamada de la función
 
 
 

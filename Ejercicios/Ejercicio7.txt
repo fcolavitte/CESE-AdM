@@ -1,24 +1,18 @@
 //Realizar una función que reciba un vector de números signados de 32 bits y devuelva la posición del máximo del vector.
 
-/**
- * @Note   Ejercicio 7
- * @brief  Devuelve la posición del valor máximo de un vector
- * @param  Puntero a donde comienza el vector
- * @param  Longitud del vector
- * @retval Null
- */
 int32_t max (int32_t * vectorIn, uint32_t longitud){
 	if(vectorIn != 0){
-		uint32_t posicition = 0;
-		uint32_t max = vectorIn[0]
+		uint32_t position = 0;
+		uint32_t max = vectorIn[0];
 		for(uint32_t i=1;i<longitud;i++){
 			if(vectorIn[i]>max){
-				posicition = i;
-				max = vector[i];
+				position = i;
+				max = vectorIn[i];
 			}
 		}
 		return position;
 	}
+	return 0;
 }
 
 

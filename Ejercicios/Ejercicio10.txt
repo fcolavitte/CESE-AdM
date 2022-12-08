@@ -15,7 +15,7 @@
 void eco(uint32_t * vector, uint32_t longitud, uint32_t offset){
 	if(vector != 0){
 		for(uint32_t i=0; i<longitud-offset;i++){
-			*vector[longitud-i-1] += *vector[longitud-i-1-offset]/2;
+			vector[longitud-i-1] += vector[longitud-i-1-offset]/2;
 		}
 	}
 }

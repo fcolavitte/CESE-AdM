@@ -1,0 +1,44 @@
+/* Realizar una función que recibe un vector de 4096 valores de 16 bits (signados), que
+ * corresponden a muestras de audio tomadas a una tasa de muestreo de 44.100 muestras/s. La función
+ * debe introducir un “eco” de la mitad de la amplitud de la muestra original a los 20ms de comenzada
+ * la grabación.
+ */
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Prototipo en "C" ejercicio 10 con SIMD:
+@   void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset)
+@
+@ Parametros recibidos:
+@   r0: dirección de memoria de inicio del vector
+@   r1: longitud. Luego se usa como indice a desplazar
+@   r2: offset
+@ Usos de registros:
+@   r3: dirección de memoria del eco
+@   r4:	valor del eco
+@   r5:	valor de salida
+.thumb_func
+	asm_eco_simd:
+		push {r4-r5}
+		sub r1,#1	@ Índice del último elemento
+		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		sub r3,r0,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		sub r3,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		add r1,#3	@ Obtengo nuevamente el valor original de la longitud y agrego 2
+		sub r1,r2	@ valores que generarán el eco
+		bfc r1,0,1  @Hago 0 el bit menos significativo
+		asm_eco_simd_main_loop:
+			ldr r4,[r3]	@ Copio el valor de la señal que generará el eco
+			lsr r4,#1	@ Divido por 2 la palabra del eco
+			bfc r4,15,1	@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
+			ldr r5,[r0]	@ Copio el valor original de la señal
+			uadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
+			str r5,[r0]	@ Almaceno el valor de la señal con eco en el vector
+			sub r0,#4	@ Muevo dos direcciones en la señal original
+			sub r3,#4	@ Muevo dos direcciones en la señal que generará el eco
+			subs r1,#2	@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
+			bne asm_eco_simd_main_loop
+	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
+	bx lr							@ Vuelve a la llamada de la función
