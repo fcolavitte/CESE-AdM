@@ -149,9 +149,11 @@ Ejemplo, ADDNE r2, r2, #1 @ Guarda en r2 la suma de r2 y 1 solo si el flag Z es 
 
 9. Describa brevemente las excepciones más prioritarias (reset, NMI, Hardfault).
 
-
------------------------------------------------------------------------
-
+Dentro de las entraqdas del NVIC se pueden encontrar interrupciones con números de excepción fijo del 1 al 15, e interrupciones con valor asignable de 16 a 255(IRQs).
+Todas las interrupciones son de prioridad seteable excepto las primeras 3, estas son Reset, NMI y HardFault.
+Reset tiene prioridad -3 (la más alta) y número de excepción 1. Tras salir del estado reset se ejecuta el reset handler.
+NMI (Non-Maskable Interrupt) prioridad -2 y número de excepción 2. Esta interrupción no puede desactivarse, actúa frente a eventos como baja tensión de alimentación.
+HardFault, prioridad -1 y número de excepción 3. Se dispara ante una falla del hardware cuando su handler está desactivado o enmascarado. Se puede desactivar limpiando su registro.
 
 10. Describa las funciones principales de la pila. ¿Cómo resuelve la arquitectura el llamado a funciones y su retorno?
 
@@ -161,21 +163,26 @@ Para hacer uso de dichos registros se debe guardar primero en la pila estos valo
 
 11. Describa la secuencia de reset del microprocesador.
 
-
-------------------------------------------------------------------
-
+Al ejecutarse la secuencia de reset, el microcontrolador lee las dos primeras palabras de la memoria.
+La primer palabra corresponde al valor inicial del MSP y la segunda a la posición inicial del vector reset.
+Tras esta se configura los registros MSP y PC con dichos valores. A continuación se procede a ejecutar el reset vector.
 
 12. ¿Qué entiende por “core peripherals”? ¿Qué diferencia existe entre estos y el resto de los periféricos?
 
-
-------------------------------------------------------
-
+En el comienzo bloque de memoria del sistema, el cual comienza en la dirección 0xE0000000 se tiene un bloque denominado private pherisferal bus(PPB).
+La memoria que conecta con dichos perisféricos son propios del sistema, por esto no se encuentran, por esto no se encuentran en el bloque de perisféricos generales que comienza en la posición 0x40000000.
+Dentro de PPB el sistem control space (SCS) el cual contiene todos los perisféricos internos del microcontrolador.
+Entre estos se puede distinguir el Systick, NVIC, SCB, entre otros.
+A diferencia del resto de perisféricos, a los core perispheral no se los puede acceder en modo unprivileged.
 
 13. ¿Cómo se implementan las prioridades de las interrupciones? Dé un ejemplo.
 
-
-------------------------------------------------------
-
+Excepto por reset, NMI y HardFault que tienen prioridades fijas, el resto se puede programar entre 0 y 255.
+La cantidad de prioridades programables las define el fabricante del microcontrolador ya que poseer un número de interrupciones con prioridad seteable aumenta el costo y consumo del componente.
+Las prioridades que no son de prioridad configurable son de valor fijo.
+En los casos de tener menor posibilidades de prioridades para elegir se descartan los bits menos significativos.
+A su vez, dentro de los bits correspondiente a la prioridad, el último se utiliza como subprioridad, siendo los bits de mayor peso los preempt priority.
+En los casos de 8bits se designan 7 para preempt priority cuyo valor define el orden de importancia de las interrupciones, mientras que la subprioridad define cuál entra primero cuando hay dos interrupciones con la misma prioridad.
 
 14. ¿Qué es el CMSIS? ¿Qué función cumple? ¿Quién lo provee? ¿Qué ventajas aporta?
 
@@ -186,59 +193,62 @@ Esto permite migraciones de microcontroladores y reutilización de códigos de f
 15. Cuando ocurre una interrupción, asumiendo que está habilitada
 ¿Cómo opera el microprocesador para atender a la subrutina correspondiente? Explique con un ejemplo.
 
+Cuando ocurre una interrupción, se guarda en el stack los registros r0-r3, r12, LR, xPSR y la dirección a la que hay que volver tras finalizar la interrupción.
+Luego de salvaguardar los valores en el stack se le pasa el control al handler correspondiente. Tras finalizar se vuelven a cargar los registros guardados en el stack y se regresa a la posición de la flash para seguir con el programa.
 
-------------------------------------------------------
+16. ¿Cómo cambia la operación de stacking al utilizar la unidad de punto flotante?
 
+El banco de registro de puntos flotantes posee 32 registros de 32bits, estos xon denominados del S0 al S31 para guardar floats y D0 al D15 para guardar doubles.
+Estos registros no son distintos, sino que cada registro doble es la unión de dos simples, por ejemplo D0 es la unión de S0 y S1.
+Al llamarse una función se guardan en el stack los valores S0 a S15 para que se utilicel libremente (similar a los registros r0-r3).
+Si la función requiere de más registros flotantes se deben guardar dentro de la función y luego volver a cargarlos antes de salir de la misma.
 
-17. ¿Cómo cambia la operación de stacking al utilizar la unidad de punto flotante?
+17. Explique las características avanzadas de atención a interrupciones: tail chaining y late arrival.
 
+Tail chining es una caracteristica que permite reducir tiempos de entradas y salidas a interrupciones. Esto se logro dado que el guardado de los registros del programa principal en la pila se ejecuta al llamarse a una función.
+Si otra interrupción de igual o inferior prioridad es habilitada mientras la primera sigue en curso, al finalizar no recuperar del stack los registros y luego los vuelve a cargar para atender la segunda función.
+Sino que, no recupera los valores del stack y pasa a la segunda interrupción tras finalizar la primera, y luego de finzalizar todas las interrupciones recupera el stack del programa principal.
+Por otro lado, cuando se está en el proceso de staking entrando a una interrupción y llega una interrupción de mayor prioridad, el proceso de staking continua sin modificarse pero cambia el vector a la interrupción a ejecutar por la de mayor prioridad, esto es llamado "late arrival".
+Con esto se logra evitar poner en stack los registros de la interrupción de menor prioridad que no empezó a ejecutarse para luego retomarlos tras ejecutar la de mayor interrupción.
 
-------------------------------------------------------
-
-
-16. Explique las características avanzadas de atención a interrupciones: tail chaining y late
-arrival.
-
-
-------------------------------------------------------
-
-
-17. ¿Qué es el systick? ¿Por qué puede afirmarse que su implementación favorece la
+18. ¿Qué es el systick? ¿Por qué puede afirmarse que su implementación favorece la
 portabilidad de los sistemas operativos embebidos?
 
+El systick es un timer que poseen los Cortex-M los cuales generan una excepción #15 en el NVIC.
+El timer Systick es del tipo decremental de 24 bits. Este timer no se puede desactivar en modo no privilegiado.
+Su función es generar interrupciones cada un periodo de tiempo fijo para el uso del kernel en los OS.
+Su existencia facilita la portabilidad entre microcontroladores cuando se utilizan RTOS.
 
-------------------------------------------------------
+19. ¿Qué funciones cumple la unidad de protección de memoria (MPU)?
 
+La MPU permite proteger partes de memoria sensible o que no deben ser accedidas desde ciertas partes del código como protección, resultando en un software más robusto.
+Su uso es ampliamente implementado en los RTOS, utilizandose para limitar los espacios de memoria accesibles por cada tarea.
+Se puede desginar distintas secciones de memoria indicando la posición inicial, el largo de la sección y sus permisos.
+De esta forma en modo no privilegiado se puede acceder solo a las partes de la memoria que define el MPU y con los permisos adecuados, como por ejemplo "solo lectura".
+Se puede implementar el registro SRD para reducir la cantidad de memoria reservada a valores que no sean múltiplos de 2. Por ejemplo una tarea que requiere 5 kB tendrá un SRD de 00011111.
+De esta forma se reservan solo los primeros 5kB desde la dirección de memoria en que se indicó como comienzo de la zona con permisos.
 
-18. ¿Qué funciones cumple la unidad de protección de memoria (MPU)?
-
-
-------------------------------------------------------
-
-
-19. ¿Cuántas regiones pueden configurarse como máximo? ¿Qué ocurre en caso de haber
+20. ¿Cuántas regiones pueden configurarse como máximo? ¿Qué ocurre en caso de haber
 solapamientos de las regiones? ¿Qué ocurre con las zonas de memoria no cubiertas por las
 regiones definidas?
 
+Se pueden configurar hasta ocho regiones de memoria en el MPU, aparte del background que corresponde a la memoria que no está incluida dentro de las zonas mencionadas.
+En caso de ocurrir solapamiento entre regiones de memoria, los permisos corresponden a la región de mayor número de identificación.
+En caso de que el flag PRIVDEFENA esté seteado, el background solo podrá ser accedido en modo privilegiado, disparando una interrupción si se quiere acceder como no privilegiado.
 
-------------------------------------------------------
-
-
-20. ¿Para qué se suele utilizar la excepción PendSV? ¿Cómo se relaciona su uso con el resto
+21. ¿Para qué se suele utilizar la excepción PendSV? ¿Cómo se relaciona su uso con el resto
 de las excepciones? Dé un ejemplo
 
+PendSV es una interrupción de baja prioridad que se ejecuta para realizar cambios de paradigma entre tareas.
+Normalmente es llamada por el kernel del RTOS desde SVC o el Systick.
+Su baja prioridad garantiza que todas las demas interrupciones se realicen antes, una vez finalizadas se produce el cambio de paradigma si seactivó la interrupción.
+Durante este cambio de paradigma la principal tarea es la de guardar los registros asociados a la tarea actual y cargar los relacionados a la tarea a la cual se va  a saltar.
 
-------------------------------------------------------
-
-
-21. ¿Para qué se suele utilizar la excepción SVC? Expliquelo dentro de un marco de un
+22. ¿Para qué se suele utilizar la excepción SVC? Expliquelo dentro de un marco de un
 sistema operativo embebido.
 
-
-------------------------------------------------------
-
-
-
+La excepción SVC sirve para que una tarea la cual se ejecuta en modo no privilegiado llame al kernel del OS y pase al modo privilegiado.
+La interrupción SVC se puede llamar mediante la función SVC denominada "llamada al supervisor".
 ISA
 1. ¿Qué son los sufijos y para qué se los utiliza? Dé un ejemplo
 
@@ -262,9 +272,9 @@ SUBS r1,#1  @ La resta da un número negativo y se actualizan los flags, con est
 3. ¿Qué utilidad tiene la implementación de instrucciones de aritmética saturada? Dé un
 ejemplo con operaciones con datos de 8 bits.
 
-
----------------------------------------------------------------------------
-
+La aritmética saturada es útil cuando se realiza procesamiento de señales para evitar obtener valores aparentemente irracionales cuando ocurre un overflow o underflow.
+Un ejemplo es si se está analizando un vector de palabras con valores medios que son inferiores a 0xff (por ejemplo), en caso de realizarse una operación de resta, uno de estos valores puede tener un under flow.
+En este caso la señal tendría la mayoría de sus elementos con valores bajos y algunos valores cercanos a 2^32. Para evitar esto, la aritmética saturada define estos underflow como 0.
 
 4. Describa brevemente la interfaz entre assembler y C ¿Cómo se reciben los argumentos de las funciones?
 ¿Cómo se devuelve el resultado? ¿Qué registros deben guardarse en la pila antes de ser modificados?
@@ -276,6 +286,7 @@ Los datos se devuelven por r0 en caso de tener una longitud igual o inferior a 3
 5. ¿Qué es una instrucción SIMD? ¿En qué se aplican y que ventajas reporta su uso? Dé un
 ejemplo.
 
-
-------------------------------------------------------
-
+El SIMD permite la operación de múltiples datos en simultaneo. Dentro de cada palabra toma fracciones iguales y realiza operaciones con dichas fracciones presentes en la misma palabra como si se tratasen de datos distintos.
+Esto incluye, en caso de overflow, que un dato no modifique al siguiente. De esta forma se puede solicitar a la ALU la realización de diversas operaciones con gran cantidad de datos en una única operación.
+Las instrucciónes SIMD permiten el uso de aritmética saturada y operaciones múltiples de multiple proceso pudiendo involucrar sumas y productos (Multiply accumulate).
+Por ejemplo, QADD8 hace referencia a realizar una operación de suma de elementos con signo de 8 bits aplicando aritmética saturada (Q).
