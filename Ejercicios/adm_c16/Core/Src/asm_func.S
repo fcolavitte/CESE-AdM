@@ -358,7 +358,7 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C" ejercicio 10:
-@   void asm_eco(uint32_t * vector, uint32_t longitud, uint32_t offset)
+@   void asm_eco(uint16_t * vector, uint32_t longitud, uint32_t offset)
 @
 @ Parametros recibidos:
 @   r0: dirección de memoria de inicio del vector
@@ -374,23 +374,23 @@
 	mov r4,r1						@ Copia en r4 el largo del vector
 	mov r5,r0						@ Hace una copia en r5 de la dirección del vector
 	asm_push_eco_loop:				@ Loop_eco_push
-		ldr r3,[r0],#4				@ Guardo en r2 el valor del vector y muevo a la siguiente posición del vector
+		ldrh r3,[r0],#2				@ Guardo en r2 el valor del vector y muevo a la siguiente posición del vector
 		lsr r3,#1					@ Divide el valor del vector por 2
 		push {r3}					@ Guardo el valor del eco en la pila
 		sub r4,#1					@ longitud--;
 		cmp r4,r2					@ Comparar la longitud que queda del vector con el offset
 		bne asm_push_eco_loop		@ End Loop_eco_push
 	asm_goto_end_vector_loop:		@ Loop para ir a la última posición del array +1
-		add r0,#4					@ Avanza un lugar en la posición del vector
+		add r0,#2					@ Avanza un lugar en la posición del vector
 		subs r4,#1					@ Avanza hasta llegar al final del vector. Resta 1 a la longitud
 		bne asm_goto_end_vector_loop
 	sub r1,r2						@ longitud -= offset;
 	asm_pop_eco_loop:				@ Loop para agregar eco a la señal
 		pop {r4}					@ Recupera el valor del último eco
-		sub r0,#4					@ Vuelve una posición para atrás en el vector
-		ldr r3,[r0]					@ Toma el valor de la posición actual del vector
+		sub r0,#2					@ Vuelve una posición para atrás en el vector
+		ldrh r3,[r0]				@ Toma el valor de la posición actual del vector
 		add r3,r4					@ Suma al valor de l a posición actual el eco
-		str r3,[r0]					@ Guarda en el vector el nuevo valor con el eco
+		strh r3,[r0]				@ Guarda en el vector el nuevo valor con el eco
 		subs r1,#1					@ longitud--;
 		bne asm_pop_eco_loop
 	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
@@ -412,27 +412,27 @@
 .thumb_func
 	asm_eco_simd:
 		push {r4-r5}
-		sub r1,#1	@ Índice del último elemento
-		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
-		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
-		sub r3,r0,r2	@ muevo al final del eco, 2 veces porque son 16bits
-		sub r3,r2	@ muevo al final del eco, 2 veces porque son 16bits
-		add r1,#3	@ Obtengo nuevamente el valor original de la longitud y agrego 2
-		sub r1,r2	@ valores que generarán el eco
-		bfc r1,0,1  @Hago 0 el bit menos significativo
+		sub r1,#2			@ Índice del último elemento
+		add r0,r1			@ muevo al final del vector, 2 veces porque son 16bits
+		add r0,r1			@ muevo al final del vector, 2 veces porque son 16bits
+		sub r3,r0,r2		@ muevo al final del eco, 2 veces porque son 16bits
+		sub r3,r2			@ muevo al final del eco, 2 veces porque son 16bits
+		add r1,#2			@ Obtengo nuevamente el valor original de la longitud
+		sub r1,r2			@ valores que generarán el eco
+		bfc r1,0,1  		@ Hago 0 el bit menos significativo
 		asm_eco_simd_main_loop:
-			ldr r4,[r3]	@ Copio el valor de la señal que generará el eco
-			lsr r4,#1	@ Divido por 2 la palabra del eco
-			bfc r4,15,1	@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
-			ldr r5,[r0]	@ Copio el valor original de la señal
+			ldr r4,[r3]		@ Copio el valor de la señal que generará el eco
+			lsr r4,#1		@ Divido por 2 la palabra del eco
+			bfc r4,15,1		@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
+			ldr r5,[r0]		@ Copio el valor original de la señal
 			uadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
-			str r5,[r0]	@ Almaceno el valor de la señal con eco en el vector
-			sub r0,#4	@ Muevo dos direcciones en la señal original
-			sub r3,#4	@ Muevo dos direcciones en la señal que generará el eco
-			subs r1,#2	@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
+			str r5,[r0]		@ Almaceno el valor de la señal con eco en el vector
+			sub r0,#4		@ Muevo dos direcciones en la señal original
+			sub r3,#4		@ Muevo dos direcciones en la señal que generará el eco
+			subs r1,#2		@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
 			bne asm_eco_simd_main_loop
-	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
-	bx lr							@ Vuelve a la llamada de la función
+	pop {r4-r5}				@ Recupera de la pila el valor de r4 y r5
+	bx lr					@ Vuelve a la llamada de la función
 
 
 

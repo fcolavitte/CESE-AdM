@@ -85,7 +85,7 @@ extern void asm_pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t lon
 extern int32_t asm_max (int32_t * vectorIn, uint32_t longitud);
 extern void asm_downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N);
 extern void asm_invertir (uint16_t * vector, uint32_t longitud);
-extern void asm_eco(uint32_t * vector, uint32_t longitud, uint32_t offset);
+extern void asm_eco(uint16_t * vector, uint32_t longitud, uint32_t offset);
 extern void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset);
 /* USER CODE END PFP */
 
@@ -185,7 +185,7 @@ int main(void)
   //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
   //asm_zeros (vector, 4); 				//Clase 5/8
 
-  uint32_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
+  uint16_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
   //uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 
@@ -202,7 +202,7 @@ int main(void)
 	  //asm_productoEscalar32 (vectorIn, vectorOut, 3, 1);
 	  //filtroVentana10(vectorIn, vectorOut, 12);
 
-	  asm_eco(vectorIn, 10, 3);
+	  asm_eco_simd(vectorIn, 12, 2);
 
     /* USER CODE BEGIN 3 */
   }
@@ -615,7 +615,7 @@ void invertir (uint16_t * vector, uint32_t longitud){
  * @param  Offset del eco
  * @retval Null
  */
-void eco(uint32_t * vector, uint32_t longitud, uint32_t offset){
+void eco(uint16_t * vector, uint32_t longitud, uint32_t offset){
 	if(vector != 0){
 		for(uint32_t i=0; i<longitud-offset;i++){
 			vector[longitud-i-1] += vector[longitud-i-1-offset]/2;
