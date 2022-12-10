@@ -72,7 +72,7 @@ void pack32to16 (int32_t * vectorIn, int16_t *vectorOut, uint32_t longitud); //E
 int32_t max (int32_t * vectorIn, uint32_t longitud); //Ejercicio 7
 void downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N); //Ejercicio 8
 void invertir (uint16_t * vector, uint32_t longitud); //Ejercicio 9
-void eco(uint32_t * vector, uint32_t longitud, uint32_t offset); //Ejercicio 10
+void eco(uint16_t * vector, uint32_t longitud, uint32_t offset); //Ejercicio 10
 
 
 //Funciones en asm:
@@ -86,7 +86,7 @@ extern int32_t asm_max (int32_t * vectorIn, uint32_t longitud);
 extern void asm_downsampleM (int32_t * vectorIn, int32_t * vectorOut, uint32_t longitud, uint32_t N);
 extern void asm_invertir (uint16_t * vector, uint32_t longitud);
 extern void asm_eco(uint16_t * vector, uint32_t longitud, uint32_t offset);
-extern void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset);
+extern void asm_eco_simd(int16_t * vector, uint32_t longitud, uint32_t offset);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -185,7 +185,7 @@ int main(void)
   //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
   //asm_zeros (vector, 4); 				//Clase 5/8
 
-  uint16_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
+  int16_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
   //uint16_t vectorOut[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 

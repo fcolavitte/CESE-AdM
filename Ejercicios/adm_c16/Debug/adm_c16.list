@@ -29,11 +29,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  0002000c  2**0
                   CONTENTS, READONLY
- 13 .debug_line   0000c772  00000000  00000000  0002003c  2**0
+ 13 .debug_line   0000c76b  00000000  00000000  0002003c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_info   0000ee6a  00000000  00000000  0002c7ae  2**0
+ 14 .debug_info   0000ee6a  00000000  00000000  0002c7a7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_abbrev 00001ca0  00000000  00000000  0003b618  2**0
+ 15 .debug_abbrev 00001ca0  00000000  00000000  0003b611  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_aranges 00000b80  00000000  00000000  0003d2b8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -554,50 +554,48 @@ Disassembly of section .text:
 	asm_eco_simd:
 		push {r4-r5}
  800038e:	b430      	push	{r4, r5}
-		sub r1,#2	@ Índice del último elemento
+		sub r1,#2			@ Índice del último elemento
  8000390:	f1a1 0102 	sub.w	r1, r1, #2
-		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		add r0,r1			@ muevo al final del vector, 2 veces porque son 16bits
  8000394:	4408      	add	r0, r1
-		add r0,r1	@ muevo al final del vector, 2 veces porque son 16bits
+		add r0,r1			@ muevo al final del vector, 2 veces porque son 16bits
  8000396:	4408      	add	r0, r1
-		sub r3,r0,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		sub r3,r0,r2		@ muevo al final del eco, 2 veces porque son 16bits
  8000398:	eba0 0302 	sub.w	r3, r0, r2
-		sub r3,r2	@ muevo al final del eco, 2 veces porque son 16bits
+		sub r3,r2			@ muevo al final del eco, 2 veces porque son 16bits
  800039c:	eba3 0302 	sub.w	r3, r3, r2
-		add r1,#2	@ Obtengo nuevamente el valor original de la longitud
+		add r1,#2			@ Obtengo nuevamente el valor original de la longitud
  80003a0:	f101 0102 	add.w	r1, r1, #2
-		sub r1,r2	@ valores que generarán el eco
+		sub r1,r2			@ valores que generarán el eco
  80003a4:	eba1 0102 	sub.w	r1, r1, r2
-		bfc r1,0,1  @Hago 0 el bit menos significativo
+		bfc r1,0,1  		@ Hago 0 el bit menos significativo
  80003a8:	f36f 0100 	bfc	r1, #0, #1
 
 080003ac <asm_eco_simd_main_loop>:
-		@mov r5,#1
-		@str r5,[r0]
 		asm_eco_simd_main_loop:
-			ldr r4,[r3]	@ Copio el valor de la señal que generará el eco
+			ldr r4,[r3]		@ Copio el valor de la señal que generará el eco
  80003ac:	681c      	ldr	r4, [r3, #0]
-			lsr r4,#1	@ Divido por 2 la palabra del eco
- 80003ae:	ea4f 0454 	mov.w	r4, r4, lsr #1
-			bfc r4,15,1	@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
- 80003b2:	f36f 34cf 	bfc	r4, #15, #1
-			ldr r5,[r0]	@ Copio el valor original de la señal
+			mov r5,#0		@ Cargo r5 con 0
+ 80003ae:	f04f 0500 	mov.w	r5, #0
+			shadd16 r4,r4,r5@ mitad de la señal para el eco
+ 80003b2:	fa94 f425 	shadd16	r4, r4, r5
+			ldr r5,[r0]		@ Copio el valor original de la señal en r5
  80003b6:	6805      	ldr	r5, [r0, #0]
-			uadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
- 80003b8:	fa95 f544 	uadd16	r5, r5, r4
-			str r5,[r0]	@ Almaceno el valor de la señal con eco en el vector
+			sadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
+ 80003b8:	fa95 f504 	sadd16	r5, r5, r4
+			str r5,[r0]		@ Almaceno el valor de la señal con eco en el vector
  80003bc:	6005      	str	r5, [r0, #0]
-			sub r0,#4	@ Muevo dos direcciones en la señal original
+			sub r0,#4		@ Muevo dos direcciones en la señal original
  80003be:	f1a0 0004 	sub.w	r0, r0, #4
-			sub r3,#4	@ Muevo dos direcciones en la señal que generará el eco
+			sub r3,#4		@ Muevo dos direcciones en la señal que generará el eco
  80003c2:	f1a3 0304 	sub.w	r3, r3, #4
-			subs r1,#2	@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
+			subs r1,#2		@ Resto 2 a la cantidad ya que proceso 2 elementos a la vez
  80003c6:	3902      	subs	r1, #2
 			bne asm_eco_simd_main_loop
  80003c8:	d1f0      	bne.n	80003ac <asm_eco_simd_main_loop>
-	pop {r4-r5}						@ Recupera de la pila el valor de r4 y r5
+	pop {r4-r5}				@ Recupera de la pila el valor de r4 y r5
  80003ca:	bc30      	pop	{r4, r5}
-	bx lr							@ Vuelve a la llamada de la función
+	bx lr					@ Vuelve a la llamada de la función
  80003cc:	4770      	bx	lr
 	...
 
@@ -917,7 +915,7 @@ int main(void)
   //uint32_t vector[4] = { 4, 5, 6, 7 };	//Clase 5/8
   //asm_zeros (vector, 4); 				//Clase 5/8
 
-  uint16_t vectorIn[12] = {4,5,8,3,7,7,12,14,3,21,11,12};
+  int16_t vectorIn[12] = {-4,5,8,3,7,7,12,14,3,21,11,12};
  80006f2:	4b08      	ldr	r3, [pc, #32]	; (8000714 <main+0x40>)
  80006f4:	463c      	mov	r4, r7
  80006f6:	461d      	mov	r5, r3

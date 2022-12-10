@@ -8,7 +8,7 @@
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Prototipo en "C" ejercicio 10 con SIMD:
-@   void asm_eco_simd(uint16_t * vector, uint32_t longitud, uint32_t offset)
+@   void asm_eco_simd(int16_t * vector, uint32_t longitud, uint32_t offset)
 @
 @ Parametros recibidos:
 @   r0: dirección de memoria de inicio del vector
@@ -31,10 +31,10 @@
 		bfc r1,0,1  		@ Hago 0 el bit menos significativo
 		asm_eco_simd_main_loop:
 			ldr r4,[r3]		@ Copio el valor de la señal que generará el eco
-			lsr r4,#1		@ Divido por 2 la palabra del eco
-			bfc r4,15,1		@ Hago 0 el bit más significativo de la mitad de la palabra menos significativa para que los dos datos estén dividido por 2.
-			ldr r5,[r0]		@ Copio el valor original de la señal
-			uadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
+			mov r5,#0		@ Cargo r5 con 0
+			shadd16 r4,r4,r5@ mitad de la señal para el eco
+			ldr r5,[r0]		@ Copio el valor original de la señal en r5
+			sadd16 r5,r5,r4	@ Guardo en r5 el valor de la señal con eco
 			str r5,[r0]		@ Almaceno el valor de la señal con eco en el vector
 			sub r0,#4		@ Muevo dos direcciones en la señal original
 			sub r3,#4		@ Muevo dos direcciones en la señal que generará el eco
